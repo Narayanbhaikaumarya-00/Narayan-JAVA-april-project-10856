@@ -1,0 +1,105 @@
+import java.util.*;
+
+class AuctionItem {
+    String itemName;
+    double highestBid;
+    String highestBidder;
+    long endTime; // stores auction end time
+
+    // Constructor to initialize item and timer
+    public AuctionItem(String itemName, double basePrice, int durationSeconds) {
+        this.itemName = itemName;
+        this.highestBid = basePrice;
+        this.highestBidder = "None";
+        this.endTime = System.currentTimeMillis() + (durationSeconds * 1000);
+    }
+
+    // Check if auction is still running
+    public boolean isAuctionActive() {
+        return System.currentTimeMillis() < endTime;
+    }
+
+    // Method to place bid
+    public void placeBid(String bidder, double amount) {
+        if (!isAuctionActive()) {
+            System.out.println("❌ Auction has ended!");
+            return;
+        }
+
+        // Validate bid
+        if (amount > highestBid) {
+            highestBid = amount;
+            highestBidder = bidder;
+            System.out.println("✅ Bid accepted!");
+        } else {
+            System.out.println("❌ Bid too low! Current highest bid is ₹" + highestBid);
+        }
+    }
+
+    // Display final result
+    public void displayWinner() {
+        System.out.println("\n🔷 Auction Result 🔷");
+        System.out.println("Item: " + itemName);
+
+        // Check if no bids placed
+        if (highestBidder.equals("None")) {
+            System.out.println("No bids were placed.");
+        } else {
+            System.out.println("Winner: " + highestBidder);
+            System.out.println("Final Bid: ₹" + String.format("%.2f", highestBid));
+        }
+    }
+}
+
+public class AuctionSystem {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Create auction item (30 sec duration)
+        AuctionItem item = new AuctionItem("Laptop", 50000, 30);
+
+        System.out.println("🔷 Auction Started for Laptop (30 seconds) 🔷");
+
+        // Loop runs until auction is active
+        while (item.isAuctionActive()) {
+            System.out.println("\n1. Place Bid\n2. Exit");
+            System.out.print("Enter choice: ");
+
+            int choice;
+            try {
+                choice = sc.nextInt(); // take choice
+            } catch (Exception e) {
+                System.out.println("Invalid input!");
+                sc.nextLine(); // clear buffer
+                continue;
+            }
+
+            if (choice == 1) {
+                sc.nextLine(); // fix input issue
+
+                System.out.print("Enter bidder name: ");
+                String name = sc.nextLine();
+
+                System.out.print("Enter bid amount: ");
+                double amount;
+
+                try {
+                    amount = sc.nextDouble();
+                } catch (Exception e) {
+                    System.out.println("Invalid bid amount!");
+                    sc.nextLine();
+                    continue;
+                }
+
+                item.placeBid(name, amount); // call bid method
+            } else if (choice == 2) {
+                break; // exit manually
+            }
+        }
+
+        System.out.println("\n⏰ Auction Ended!");
+        item.displayWinner(); // show result
+
+        sc.close(); // close scanner
+    }
+}
