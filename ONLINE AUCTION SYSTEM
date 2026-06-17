@@ -1,105 +1,138 @@
-import java.util.*;
+import java.util.Scanner;
 
-class AuctionItem {
-    String itemName;
-    double highestBid;
-    String highestBidder;
-    long endTime; // stores auction end time
+public class Main {
 
-    // Constructor to initialize item and timer
-    public AuctionItem(String itemName, double basePrice, int durationSeconds) {
-        this.itemName = itemName;
-        this.highestBid = basePrice;
-        this.highestBidder = "None";
-        this.endTime = System.currentTimeMillis() + (durationSeconds * 1000);
-    }
+    static class AuctionItem {
+        String itemName;
+        double highestBid;
+        String highestBidder;
+        long endTime;
+        boolean bidPlaced;
 
-    // Check if auction is still running
-    public boolean isAuctionActive() {
-        return System.currentTimeMillis() < endTime;
-    }
-
-    // Method to place bid
-    public void placeBid(String bidder, double amount) {
-        if (!isAuctionActive()) {
-            System.out.println("❌ Auction has ended!");
-            return;
+        public AuctionItem(String itemName, double basePrice, int durationSeconds) {
+            this.itemName = itemName;
+            this.highestBid = basePrice;
+            this.highestBidder = "None";
+            this.endTime = System.currentTimeMillis() + (durationSeconds * 1000L);
+            this.bidPlaced = false;
         }
 
-        // Validate bid
-        if (amount > highestBid) {
-            highestBid = amount;
-            highestBidder = bidder;
-            System.out.println("✅ Bid accepted!");
-        } else {
-            System.out.println("❌ Bid too low! Current highest bid is ₹" + highestBid);
+        public boolean isAuctionActive() {
+            return System.currentTimeMillis() < endTime;
+        }
+
+        public long getRemainingTime() {
+            long timeLeft = (endTime - System.currentTimeMillis()) / 1000;
+            return Math.max(timeLeft, 0);
+        }
+
+        public void placeBid(String bidder, double amount) {
+
+            if (!isAuctionActive()) {
+                System.out.println("❌ Auction has ended!");
+                return;
+            }
+
+            if (bidder == null || bidder.trim().isEmpty()) {
+                System.out.println("❌ Invalid bidder name!");
+                return;
+            }
+
+            if (amount <= 0) {
+                System.out.println("❌ Bid amount must be greater than 0!");
+                return;
+            }
+
+            if (amount > highestBid) {
+                highestBid = amount;
+                highestBidder = bidder;
+                bidPlaced = true;
+                System.out.println("✅ Bid accepted!");
+            } else {
+                System.out.println("❌ Bid too low! Current highest bid: ₹" + highestBid);
+            }
+        }
+
+        public void displayWinner() {
+            System.out.println("\n========== AUCTION RESULT ==========");
+            System.out.println("Item: " + itemName);
+
+            if (!bidPlaced) {
+                System.out.println("No valid bids were placed.");
+            } else {
+                System.out.println("Winner: " + highestBidder);
+                System.out.println("Winning Bid: ₹" + highestBid);
+            }
         }
     }
 
-    // Display final result
-    public void displayWinner() {
-        System.out.println("\n🔷 Auction Result 🔷");
-        System.out.println("Item: " + itemName);
-
-        // Check if no bids placed
-        if (highestBidder.equals("None")) {
-            System.out.println("No bids were placed.");
-        } else {
-            System.out.println("Winner: " + highestBidder);
-            System.out.println("Final Bid: ₹" + String.format("%.2f", highestBid));
-        }
-    }
-}
-
-public class AuctionSystem {
     public static void main(String[] args) {
+
         Scanner sc = new Scanner(System.in);
 
-        // Create auction item (30 sec duration)
         AuctionItem item = new AuctionItem("Laptop", 50000, 30);
 
-        System.out.println("🔷 Auction Started for Laptop (30 seconds) 🔷");
+        System.out.println("========== AUCTION STARTED ==========");
+        System.out.println("Item: Laptop");
+        System.out.println("Base Price: ₹50000");
+        System.out.println("Duration: 30 seconds");
 
-        // Loop runs until auction is active
         while (item.isAuctionActive()) {
-            System.out.println("\n1. Place Bid\n2. Exit");
+
+            System.out.println("\nTime Left: " + item.getRemainingTime() + " sec");
+            System.out.println("1. Place Bid");
+            System.out.println("2. Show Current Status");
+            System.out.println("3. Exit");
             System.out.print("Enter choice: ");
 
-            int choice;
-            try {
-                choice = sc.nextInt(); // take choice
-            } catch (Exception e) {
-                System.out.println("Invalid input!");
-                sc.nextLine(); // clear buffer
+            if (!sc.hasNextInt()) {
+                System.out.println("❌ Please enter a valid number.");
+                sc.next();
                 continue;
             }
 
-            if (choice == 1) {
-                sc.nextLine(); // fix input issue
+            int choice = sc.nextInt();
+            sc.nextLine();
 
-                System.out.print("Enter bidder name: ");
-                String name = sc.nextLine();
+            switch (choice) {
 
-                System.out.print("Enter bid amount: ");
-                double amount;
+                case 1:
+                    System.out.print("Enter bidder name: ");
+                    String name = sc.nextLine();
 
-                try {
-                    amount = sc.nextDouble();
-                } catch (Exception e) {
-                    System.out.println("Invalid bid amount!");
+                    System.out.print("Enter bid amount: ");
+
+                    if (!sc.hasNextDouble()) {
+                        System.out.println("❌ Invalid bid amount!");
+                        sc.next();
+                        break;
+                    }
+
+                    double amount = sc.nextDouble();
                     sc.nextLine();
-                    continue;
-                }
 
-                item.placeBid(name, amount); // call bid method
-            } else if (choice == 2) {
-                break; // exit manually
+                    item.placeBid(name, amount);
+                    break;
+
+                case 2:
+                    System.out.println("Current Highest Bid: ₹" + item.highestBid);
+                    System.out.println("Highest Bidder: " + item.highestBidder);
+                    break;
+
+                case 3:
+                    System.out.println("Auction exited by user.");
+                    item.displayWinner();
+                    sc.close();
+                    return;
+
+                default:
+                    System.out.println("❌ Invalid choice!");
             }
         }
 
-        System.out.println("\n⏰ Auction Ended!");
-        item.displayWinner(); // show result
+        System.out.println("\n⏰ Auction Time Over!");
+        item.displayWinner();
 
-        sc.close(); // close scanner
+        sc.close();
     }
 }
